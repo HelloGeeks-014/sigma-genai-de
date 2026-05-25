@@ -24,7 +24,7 @@ EXPECTED_FILES = {
 def load_students():
     """Load github_username -> real_name mapping from students.csv."""
     mapping = {}
-    csv_path = os.path.join(os.path.dirname(__file__), '..', 'students.csv')
+    csv_path = os.path.join(os.path.dirname(__file__), 'students.csv')
     try:
         with open(csv_path, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
