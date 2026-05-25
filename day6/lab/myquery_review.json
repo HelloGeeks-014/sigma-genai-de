@@ -1,0 +1,51 @@
+{
+  "file": "queries/myquery.sql",
+  "reviewed_at": "2026-05-25T19:01:04.428750",
+  "issues_found": 5,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect Revenue Calculation",
+        "line": "SUM(t.amount) AS revenue",
+        "problem": "The query is summing all amounts without filtering for completed transactions only.",
+        "fix": "SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue"
+      },
+      {
+        "severity": "Medium",
+        "category": "Correctness",
+        "title": "Missing Filter for Completed Transactions",
+        "line": "WHERE t.created_at > '2024-01-01'",
+        "problem": "The query does not filter transactions by status, which is required for correct revenue calculation.",
+        "fix": "WHERE t.status = 'COMPLETED' AND t.created_at > '2024-01-01'"
+      },
+      {
+        "severity": "Medium",
+        "category": "Readability",
+        "title": "Unnecessary Columns in GROUP BY",
+        "line": "GROUP BY t.merchant_id, m.merchant_name, m.email",
+        "problem": "Including m.email in the GROUP BY clause is unnecessary and can be removed.",
+        "fix": "GROUP BY t.merchant_id, m.merchant_name"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Ambiguous Column Name",
+        "line": "t.created_at",
+        "problem": "The column name 'created_at' is not present in the schema. It should be 'transaction_date'.",
+        "fix": "t.transaction_date"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Missing Comments",
+        "line": "Entire Query",
+        "problem": "The query lacks comments explaining the purpose and logic.",
+        "fix": "Add comments to explain the purpose and logic of the query."
+      }
+    ],
+    "corrected_sql": "SELECT\n    t.merchant_id,\n    SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue,\n    m.merchant_name\nFROM fact_transactions t\nJOIN dim_merchant m ON t.merchant_id = m.merchant_id\nWHERE t.status = 'COMPLETED' AND t.transaction_date > '2024-01-01'\nGROUP BY t.merchant_id, m.merchant_name;",
+    "summary": "The query had issues with incorrect revenue calculation, missing status filter, unnecessary columns in GROUP BY, and readability improvements."
+  }
+}

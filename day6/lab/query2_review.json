@@ -1,0 +1,43 @@
+{
+  "file": "queries/query2.sql",
+  "reviewed_at": "2026-05-25T19:03:10.490106",
+  "issues_found": 4,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect revenue calculation",
+        "line": "SUM(amount) WHERE status = 'COMPLETED'",
+        "problem": "The query does not filter transactions by status 'COMPLETED' to calculate revenue.",
+        "fix": "SUM(amount) WHERE status = 'COMPLETED'"
+      },
+      {
+        "severity": "Medium",
+        "category": "Correctness",
+        "title": "Missing join with dim_merchant",
+        "line": "merchant_id",
+        "problem": "The query should join with dim_merchant to get merchant names instead of showing merchant IDs.",
+        "fix": "JOIN sigma_analytics.dim_merchant ON sigma_analytics.fact_transactions.merchant_id = sigma_analytics.dim_merchant.merchant_id"
+      },
+      {
+        "severity": "Low",
+        "category": "Performance",
+        "title": "Potential performance issue with correlated subquery",
+        "line": "COUNT(FAILED) / COUNT(*)",
+        "problem": "Using correlated subqueries can lead to performance issues. It's better to use a single query with conditional aggregation.",
+        "fix": "SELECT SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue, SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(*) * 100 AS failure_rate FROM sigma_analytics.fact_transactions"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Lack of comments",
+        "line": "Entire query",
+        "problem": "The query lacks comments explaining the logic, which makes it harder to understand.",
+        "fix": "Add comments explaining the purpose of each part of the query."
+      }
+    ],
+    "corrected_sql": "SELECT SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue, SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(*) * 100 AS failure_rate FROM sigma_analytics.fact_transactions JOIN sigma_analytics.dim_merchant ON sigma_analytics.fact_transactions.merchant_id = sigma_analytics.dim_merchant.merchant_id",
+    "summary": "The query had issues with revenue calculation, missing join with dim_merchant, potential performance issues, and readability."
+  }
+}

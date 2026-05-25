@@ -1,0 +1,188 @@
+{
+  "directory": "queries/",
+  "reviewed_at": "2026-05-25T19:03:13.154819",
+  "files_reviewed": 4,
+  "total_issues": 17,
+  "files": [
+    {
+      "file": "queries/my_query.sql",
+      "reviewed_at": "2026-05-25T19:03:03.810658",
+      "issues_found": 6,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect revenue calculation",
+            "line": "SUM(t.amount) AS revenue",
+            "problem": "Revenue is calculated without filtering for completed transactions only.",
+            "fix": "SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue"
+          },
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Missing filter for transaction status",
+            "line": "WHERE t.created_at > '2024-01-01'",
+            "problem": "The query does not filter transactions by status, which is required for correct revenue calculation.",
+            "fix": "AND t.status IN ('COMPLETED', 'FAILED')"
+          },
+          {
+            "severity": "Medium",
+            "category": "Readability",
+            "title": "Unnecessary columns in GROUP BY",
+            "line": "GROUP BY t.merchant_id, m.merchant_name, m.email",
+            "problem": "Including m.email in the GROUP BY clause is unnecessary and can be removed.",
+            "fix": "GROUP BY t.merchant_id, m.merchant_name"
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Missing comments",
+            "line": "Entire query",
+            "problem": "The query lacks comments explaining the purpose and logic.",
+            "fix": "Add comments explaining the purpose of each clause and calculation."
+          },
+          {
+            "severity": "Medium",
+            "category": "Security",
+            "title": "PII exposure",
+            "line": "m.email",
+            "problem": "Exposing email addresses in the result set can lead to privacy risks.",
+            "fix": "Remove m.email from the SELECT clause."
+          },
+          {
+            "severity": "Medium",
+            "category": "Performance",
+            "title": "Potential performance issue with implicit join",
+            "line": "JOIN dim_merchant m ON t.merchant_id = m.merchant_id",
+            "problem": "The query uses an implicit join which can be less efficient than an explicit JOIN.",
+            "fix": "Use an explicit JOIN clause."
+          }
+        ],
+        "corrected_sql": "SELECT t.merchant_id, SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue, m.merchant_name FROM fact_transactions t JOIN dim_merchant m ON t.merchant_id = m.merchant_id WHERE t.transaction_date > '2024-01-01' AND t.status IN ('COMPLETED', 'FAILED') GROUP BY t.merchant_id, m.merchant_name;",
+        "summary": "The query had critical correctness issues with revenue calculation and missing status filter. It also exposed PII and lacked readability and performance optimizations."
+      }
+    },
+    {
+      "file": "queries/query1.sql",
+      "reviewed_at": "2026-05-25T19:03:07.319418",
+      "issues_found": 3,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect revenue calculation",
+            "line": "SELECT SUM(amount) AS revenue",
+            "problem": "The query calculates revenue without filtering for completed transactions only.",
+            "fix": "SELECT SUM(amount) AS revenue FROM sigma_analytics.fact_transactions WHERE status = 'COMPLETED'"
+          },
+          {
+            "severity": "Medium",
+            "category": "Performance",
+            "title": "Potential performance issue with implicit join",
+            "line": "SELECT t.merchant_id, m.merchant_name",
+            "problem": "Using merchant_id without a JOIN clause can lead to implicit join behavior, which can be inefficient.",
+            "fix": "SELECT t.merchant_id, m.merchant_name FROM sigma_analytics.fact_transactions t JOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id"
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Lack of comments on complex logic",
+            "line": "SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM sigma_analytics.fact_transactions) AS failure_rate",
+            "problem": "The query lacks comments explaining the calculation of the failure rate.",
+            "fix": "/* Calculate failure rate as the percentage of failed transactions */ SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM sigma_analytics.fact_transactions) AS failure_rate FROM sigma_analytics.fact_transactions WHERE status = 'FAILED'"
+          }
+        ],
+        "corrected_sql": "WITH completed_transactions AS (SELECT SUM(amount) AS revenue FROM sigma_analytics.fact_transactions WHERE status = 'COMPLETED'), total_transactions AS (SELECT COUNT(*) AS total FROM sigma_analytics.fact_transactions), failed_transactions AS (SELECT COUNT(*) AS failed FROM sigma_analytics.fact_transactions WHERE status = 'FAILED') SELECT revenue, (failed * 100.0 / total) AS failure_rate FROM completed_transactions, total_transactions, failed_transactions; /* Calculate revenue and failure rate */",
+        "summary": "The query had issues with revenue calculation, potential performance issues, and readability. Corrected the revenue calculation, added comments for readability, and ensured joins are explicit."
+      }
+    },
+    {
+      "file": "queries/query2.sql",
+      "reviewed_at": "2026-05-25T19:03:10.490106",
+      "issues_found": 4,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect revenue calculation",
+            "line": "SUM(amount) WHERE status = 'COMPLETED'",
+            "problem": "The query does not filter transactions by status 'COMPLETED' to calculate revenue.",
+            "fix": "SUM(amount) WHERE status = 'COMPLETED'"
+          },
+          {
+            "severity": "Medium",
+            "category": "Correctness",
+            "title": "Missing join with dim_merchant",
+            "line": "merchant_id",
+            "problem": "The query should join with dim_merchant to get merchant names instead of showing merchant IDs.",
+            "fix": "JOIN sigma_analytics.dim_merchant ON sigma_analytics.fact_transactions.merchant_id = sigma_analytics.dim_merchant.merchant_id"
+          },
+          {
+            "severity": "Low",
+            "category": "Performance",
+            "title": "Potential performance issue with correlated subquery",
+            "line": "COUNT(FAILED) / COUNT(*)",
+            "problem": "Using correlated subqueries can lead to performance issues. It's better to use a single query with conditional aggregation.",
+            "fix": "SELECT SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue, SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(*) * 100 AS failure_rate FROM sigma_analytics.fact_transactions"
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Lack of comments",
+            "line": "Entire query",
+            "problem": "The query lacks comments explaining the logic, which makes it harder to understand.",
+            "fix": "Add comments explaining the purpose of each part of the query."
+          }
+        ],
+        "corrected_sql": "SELECT SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue, SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(*) * 100 AS failure_rate FROM sigma_analytics.fact_transactions JOIN sigma_analytics.dim_merchant ON sigma_analytics.fact_transactions.merchant_id = sigma_analytics.dim_merchant.merchant_id",
+        "summary": "The query had issues with revenue calculation, missing join with dim_merchant, potential performance issues, and readability."
+      }
+    },
+    {
+      "file": "queries/query3.sql",
+      "reviewed_at": "2026-05-25T19:03:13.153546",
+      "issues_found": 4,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect calculation of failure rate",
+            "line": "10",
+            "problem": "The failure rate calculation is incorrect as it uses COUNT(FAILED) which will always be zero because 'FAILED' is a string, not a boolean.",
+            "fix": "COUNT(CASE WHEN status = 'FAILED' THEN 1 END)"
+          },
+          {
+            "severity": "Medium",
+            "category": "Performance",
+            "title": "Potential performance issue with implicit join",
+            "line": "5",
+            "problem": "The query uses implicit joins which can lead to Cartesian products and performance issues.",
+            "fix": "Use explicit JOIN clauses"
+          },
+          {
+            "severity": "Medium",
+            "category": "Readability",
+            "title": "Lack of comments on complex logic",
+            "line": "Entire query",
+            "problem": "The query lacks comments explaining the logic, making it harder to understand.",
+            "fix": "Add comments explaining each part of the query"
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Inconsistent naming convention",
+            "line": "Entire query",
+            "problem": "The naming convention is inconsistent (e.g., 'FAILED' vs 'COMPLETED' casing).",
+            "fix": "Standardize casing for consistency"
+          }
+        ],
+        "corrected_sql": "SELECT \n    SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue,\n    (COUNT(CASE WHEN status = 'FAILED' THEN 1 END) * 100.0 / COUNT(*)) AS failure_rate\nFROM sigma_analytics.fact_transactions ft\nJOIN sigma_analytics.dim_merchant dm ON ft.merchant_id = dm.merchant_id\nWHERE ft.status IN ('COMPLETED', 'FAILED');",
+        "summary": "The query has critical correctness issues with failure rate calculation and potential performance issues with implicit joins. Readability can be improved with comments and consistent naming."
+      }
+    }
+  ]
+}

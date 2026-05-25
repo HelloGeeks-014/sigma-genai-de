@@ -1,0 +1,59 @@
+{
+  "file": "queries/my_query.sql",
+  "reviewed_at": "2026-05-25T19:03:03.810658",
+  "issues_found": 6,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect revenue calculation",
+        "line": "SUM(t.amount) AS revenue",
+        "problem": "Revenue is calculated without filtering for completed transactions only.",
+        "fix": "SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue"
+      },
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Missing filter for transaction status",
+        "line": "WHERE t.created_at > '2024-01-01'",
+        "problem": "The query does not filter transactions by status, which is required for correct revenue calculation.",
+        "fix": "AND t.status IN ('COMPLETED', 'FAILED')"
+      },
+      {
+        "severity": "Medium",
+        "category": "Readability",
+        "title": "Unnecessary columns in GROUP BY",
+        "line": "GROUP BY t.merchant_id, m.merchant_name, m.email",
+        "problem": "Including m.email in the GROUP BY clause is unnecessary and can be removed.",
+        "fix": "GROUP BY t.merchant_id, m.merchant_name"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Missing comments",
+        "line": "Entire query",
+        "problem": "The query lacks comments explaining the purpose and logic.",
+        "fix": "Add comments explaining the purpose of each clause and calculation."
+      },
+      {
+        "severity": "Medium",
+        "category": "Security",
+        "title": "PII exposure",
+        "line": "m.email",
+        "problem": "Exposing email addresses in the result set can lead to privacy risks.",
+        "fix": "Remove m.email from the SELECT clause."
+      },
+      {
+        "severity": "Medium",
+        "category": "Performance",
+        "title": "Potential performance issue with implicit join",
+        "line": "JOIN dim_merchant m ON t.merchant_id = m.merchant_id",
+        "problem": "The query uses an implicit join which can be less efficient than an explicit JOIN.",
+        "fix": "Use an explicit JOIN clause."
+      }
+    ],
+    "corrected_sql": "SELECT t.merchant_id, SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS revenue, m.merchant_name FROM fact_transactions t JOIN dim_merchant m ON t.merchant_id = m.merchant_id WHERE t.transaction_date > '2024-01-01' AND t.status IN ('COMPLETED', 'FAILED') GROUP BY t.merchant_id, m.merchant_name;",
+    "summary": "The query had critical correctness issues with revenue calculation and missing status filter. It also exposed PII and lacked readability and performance optimizations."
+  }
+}

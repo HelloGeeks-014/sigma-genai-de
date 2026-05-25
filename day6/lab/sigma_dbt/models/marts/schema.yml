@@ -1,0 +1,45 @@
+version: 2
+
+mart_transaction_metrics:
+  description: "Metrics derived from transaction data including revenue, failure rate, and merchant details."
+  columns:
+    - name: transaction_id
+      description: "Unique identifier for each transaction."
+    - name: amount
+      description: "Amount of the transaction in USD."
+    - name: status
+      description: "Status of the transaction (COMPLETED, FAILED, PENDING)."
+    - name: merchant_id
+      description: "Foreign key referencing the merchant who processed the transaction."
+      tests:
+        - not_null
+    - name: customer_id
+      description: "Foreign key referencing the customer who made the transaction."
+    - name: transaction_date
+      description: "Date when the transaction occurred."
+    - name: payment_method
+      description: "Payment method used for the transaction (CREDIT_CARD, DEBIT_CARD, UPI)."
+    - name: merchant_name
+      description: "Name of the merchant who processed the transaction."
+    - name: failure_rate_pct
+      description: "Failure rate of transactions as a percentage."
+      tests:
+        - generic_test:
+            function: "between"
+            args:
+              min_value: 0
+              max_value: 100
+    - name: total_revenue
+      description: "Total revenue from completed transactions."
+      tests:
+        - generic_test:
+            function: "gte"
+            args:
+              value: 0
+    - name: cancelled_transactions_count
+      description: "Count of transactions with status 'CANCELLED'."
+      tests:
+        - generic_test:
+            function: "equal_to"
+            args:
+              value: 0

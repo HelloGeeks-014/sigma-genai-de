@@ -1,0 +1,35 @@
+{
+  "file": "queries/query1.sql",
+  "reviewed_at": "2026-05-25T19:03:07.319418",
+  "issues_found": 3,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect revenue calculation",
+        "line": "SELECT SUM(amount) AS revenue",
+        "problem": "The query calculates revenue without filtering for completed transactions only.",
+        "fix": "SELECT SUM(amount) AS revenue FROM sigma_analytics.fact_transactions WHERE status = 'COMPLETED'"
+      },
+      {
+        "severity": "Medium",
+        "category": "Performance",
+        "title": "Potential performance issue with implicit join",
+        "line": "SELECT t.merchant_id, m.merchant_name",
+        "problem": "Using merchant_id without a JOIN clause can lead to implicit join behavior, which can be inefficient.",
+        "fix": "SELECT t.merchant_id, m.merchant_name FROM sigma_analytics.fact_transactions t JOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Lack of comments on complex logic",
+        "line": "SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM sigma_analytics.fact_transactions) AS failure_rate",
+        "problem": "The query lacks comments explaining the calculation of the failure rate.",
+        "fix": "/* Calculate failure rate as the percentage of failed transactions */ SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM sigma_analytics.fact_transactions) AS failure_rate FROM sigma_analytics.fact_transactions WHERE status = 'FAILED'"
+      }
+    ],
+    "corrected_sql": "WITH completed_transactions AS (SELECT SUM(amount) AS revenue FROM sigma_analytics.fact_transactions WHERE status = 'COMPLETED'), total_transactions AS (SELECT COUNT(*) AS total FROM sigma_analytics.fact_transactions), failed_transactions AS (SELECT COUNT(*) AS failed FROM sigma_analytics.fact_transactions WHERE status = 'FAILED') SELECT revenue, (failed * 100.0 / total) AS failure_rate FROM completed_transactions, total_transactions, failed_transactions; /* Calculate revenue and failure rate */",
+    "summary": "The query had issues with revenue calculation, potential performance issues, and readability. Corrected the revenue calculation, added comments for readability, and ensured joins are explicit."
+  }
+}

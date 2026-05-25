@@ -1,0 +1,43 @@
+{
+  "file": "queries/query3.sql",
+  "reviewed_at": "2026-05-25T19:03:13.153546",
+  "issues_found": 4,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect calculation of failure rate",
+        "line": "10",
+        "problem": "The failure rate calculation is incorrect as it uses COUNT(FAILED) which will always be zero because 'FAILED' is a string, not a boolean.",
+        "fix": "COUNT(CASE WHEN status = 'FAILED' THEN 1 END)"
+      },
+      {
+        "severity": "Medium",
+        "category": "Performance",
+        "title": "Potential performance issue with implicit join",
+        "line": "5",
+        "problem": "The query uses implicit joins which can lead to Cartesian products and performance issues.",
+        "fix": "Use explicit JOIN clauses"
+      },
+      {
+        "severity": "Medium",
+        "category": "Readability",
+        "title": "Lack of comments on complex logic",
+        "line": "Entire query",
+        "problem": "The query lacks comments explaining the logic, making it harder to understand.",
+        "fix": "Add comments explaining each part of the query"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Inconsistent naming convention",
+        "line": "Entire query",
+        "problem": "The naming convention is inconsistent (e.g., 'FAILED' vs 'COMPLETED' casing).",
+        "fix": "Standardize casing for consistency"
+      }
+    ],
+    "corrected_sql": "SELECT \n    SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) AS revenue,\n    (COUNT(CASE WHEN status = 'FAILED' THEN 1 END) * 100.0 / COUNT(*)) AS failure_rate\nFROM sigma_analytics.fact_transactions ft\nJOIN sigma_analytics.dim_merchant dm ON ft.merchant_id = dm.merchant_id\nWHERE ft.status IN ('COMPLETED', 'FAILED');",
+    "summary": "The query has critical correctness issues with failure rate calculation and potential performance issues with implicit joins. Readability can be improved with comments and consistent naming."
+  }
+}
