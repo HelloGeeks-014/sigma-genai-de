@@ -1,0 +1,113 @@
+SIGMA DATATECH TRANSACTION ANALYTICS PIPELINE SPEC
+Team: Sigma Intelligence Platform
+Spec Date: 2026-05-26
+
+SCENARIO SELECTED:
+Team 1 — Customer Churn Prediction Feed
+
+========================================
+1. BUSINESS OBJECTIVE (The "why")
+========================================
+Identify customers at risk of churning before they leave. This enables the customer success team to proactively reach out with targeted retention campaigns. By flagging customers with no transaction in 14 days, we can intervene early and reduce churn rate.
+
+========================================
+2. DATA INPUTS (Sources + schemas)
+========================================
+Input 1: Transaction History Table (Silver Layer)
+- Columns: transaction_id, customer_id, merchant_id, amount, transaction_date, status, payment_method
+- Format: Parquet
+- Partitioned by: transaction_date
+- Frequency: Daily
+
+Input 2: Reference Data (Optional - for validation)
+- Customer Master Table with customer metadata
+- Used to enrich churn_risk table with customer segment information
+
+========================================
+3. TRANSFORMATIONS (The ETL logic)
+========================================
+Step 1: Read last 14 days of transaction history from Silver layer
+- Filter transactions where status = 'COMPLETED' and transaction_date >= (today - 14 days)
+
+Step 2: Calculate RFM Features per customer
+- Recency: Days since last transaction (current_date - max(transaction_date))
+- Frequency: Count of transactions in last 14 days
+- Monetary: Sum of amount in last 14 days
+
+Step 3: Identify at-risk customers
+- Flag customer as at_risk = true if:
+  * Recency >= 14 days (no transaction in 14 days), OR
+  * Frequency = 0 (no transactions at all in the lookback window)
+
+Step 4: Add confidence scoring
+- Create confidence_score (0-100) based on:
+  * Historical churn indicators
+  * Customer segment
+  * Transaction frequency trend
+
+========================================
+4. OUTPUT REQUIREMENTS (Destination + schema)
+========================================
+Table Name: churn_risk
+Location: s3://sigma-datatech/gold/churn_risk
+Format: Parquet
+Partitioning: Partitioned by churn_score_date
+
+Output Schema:
+- customer_id (String)
+- at_risk (Boolean)
+- recency_days (Integer)
+- frequency_14d (Integer)
+- monetary_14d (Float)
+- confidence_score (Float, 0-100)
+- last_transaction_date (Date)
+- churn_score_date (Date) - partition column
+- generated_at (Timestamp)
+
+========================================
+5. FAILURE HANDLING & SAFEGUARDS
+========================================
+Error Handling:
+- Wrap pipeline stages in try/except blocks
+- Log failures with timestamp and error details
+- Partial failures should not halt the entire pipeline
+
+Data Quality Checks:
+- Validate customer_id is not NULL before writing
+- Ensure recency_days >= 0
+- Check confidence_score is between 0 and 100
+- Log row counts before and after major transformations
+
+Idempotency:
+- Pipeline uses overwrite mode (not append) to ensure idempotent runs
+- If job is re-run on same date, previous output is replaced cleanly
+
+========================================
+6. MONITORING & OBSERVABILITY
+========================================
+Metrics to Log:
+- Total customers processed
+- Count of at_risk customers identified
+- Average confidence_score
+- Pipeline execution time
+- Row counts at each stage (input, after RFM calc, after at_risk flag, output)
+
+Alerting:
+- Alert if at_risk customer count exceeds 20% of active customers (anomaly detection)
+- Alert if pipeline fails or runs longer than 5 minutes
+
+Output Report:
+- Write pipeline metadata to JSON:
+  {
+    "run_date": "2026-05-27",
+    "total_customers": 50000,
+    "at_risk_count": 8500,
+    "avg_confidence_score": 72.5,
+    "execution_time_seconds": 145,
+    "status": "COMPLETED"
+  }
+
+========================================
+SUMMARY
+========================================
+This pipeline identifies customers at risk of churn by analyzing transaction recency and frequency over a 14-day lookback window. It enriches the data with RFM features and confidence scoring to enable prioritized outreach. The output is written to the Gold layer and partitioned by date for efficient querying by the customer success team.

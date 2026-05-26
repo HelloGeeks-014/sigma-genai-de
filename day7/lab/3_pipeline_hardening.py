@@ -115,20 +115,29 @@ Return ONLY the complete hardened Python file. No markdown fences. No commentary
 
 def load_generated_pipeline() -> tuple[str, str]:
     """
-    Load the pipeline from Module 1 output, or fall back to stub.
+    Load the pipeline from Module 1 output, the student's local pipeline,
+    or fall back to stub.
     Returns (code, source_label).
     """
-    generated_path = os.path.join(OUTPUT_DIR, "generated_pipeline.py")
-    if os.path.exists(generated_path):
+    candidate_paths = [
+        os.path.join(OUTPUT_DIR, "generated_pipeline.py"),
+        os.path.join(OUTPUT_DIR, "my_pipeline.py"),
+    ]
+
+    for generated_path in candidate_paths:
+        if not os.path.exists(generated_path):
+            continue
+
         with open(generated_path, "r", encoding="utf-8") as f:
             code = f.read()
-        print(f"[Load] Using AI-generated pipeline from Module 1")
+        source_label = generated_path.replace(os.sep, "/")
+        print(f"[Load] Using pipeline from {source_label}")
         print(f"[Load] {generated_path} ({len(code):,} chars, {len(code.splitlines())} lines)")
-        return code, "pipeline_brain/generated_pipeline.py"
-    else:
-        print(f"[Load] Module 1 output not found. Using embedded stub.")
-        print(f"[Load] (Run 1_spec_to_pipeline.py first for better results)")
-        return STUB_PIPELINE, "embedded_stub"
+        return code, source_label
+
+    print(f"[Load] Module 1 output not found. Using embedded stub.")
+    print(f"[Load] (Run 1_spec_to_pipeline.py first for better results)")
+    return STUB_PIPELINE, "embedded_stub"
 
 
 def harden_pipeline(code: str, spec: str) -> tuple[str, dict]:
@@ -166,7 +175,7 @@ Add ALL FIVE of these improvements:
 
 4. ROW COUNT LOGGING AT EACH STAGE
    - After each major transformation, call df.count() and log the result
-   - Log format: "[Stage: {stage_name}] {label}: {count:,} rows"
+   - Log format: "[Stage: {{stage_name}}] {{label}}: {{count:,}} rows"
    - Track these counts: input_count, after_filter_count, after_dedup_count, output_count
 
 5. RUN METADATA JSON
@@ -244,7 +253,7 @@ def main():
     print("\n" + "=" * 65)
     print("  MANUAL FIRST — Do This Before Running!")
     print("=" * 65)
-    print("  Open pipeline_brain/generated_pipeline.py")
+    print("  Open pipeline_brain/generated_pipeline.py or pipeline_brain/my_pipeline.py")
     print("  Find ONE place where this pipeline would fail silently")
     print("  (no crash, no error, just missing or wrong output).")
     print("  Hint: look at how partitions are written.")

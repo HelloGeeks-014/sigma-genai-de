@@ -1,0 +1,102 @@
+{
+  "checkpoints": [
+    {
+      "id": 1,
+      "name": "IDEMPOTENCY",
+      "status": "PASS",
+      "finding": "All write operations use overwrite mode.",
+      "fix": "None needed."
+    },
+    {
+      "id": 2,
+      "name": "ERROR_HANDLING",
+      "status": "FAIL",
+      "finding": "No try/except blocks around pipeline stages.",
+      "fix": "Wrap each pipeline stage in try/except blocks."
+    },
+    {
+      "id": 3,
+      "name": "PARTITION_PRUNING",
+      "status": "PASS",
+      "finding": "Read operations are filtered by date/partition column.",
+      "fix": "None needed."
+    },
+    {
+      "id": 4,
+      "name": "ROW_COUNT_LOGGING",
+      "status": "WARN",
+      "finding": "No row count logging after transformation stages.",
+      "fix": "Add logging statements to log row counts after each transformation."
+    },
+    {
+      "id": 5,
+      "name": "BUSINESS_RULES",
+      "status": "PASS",
+      "finding": "Revenue is calculated as SUM(amount) WHERE status='COMPLETED'.",
+      "fix": "None needed."
+    },
+    {
+      "id": 6,
+      "name": "NULL_HANDLING",
+      "status": "PASS",
+      "finding": "NULL checks present on primary key and critical columns.",
+      "fix": "None needed."
+    },
+    {
+      "id": 7,
+      "name": "BROADCAST_HINT",
+      "status": "PASS",
+      "finding": "broadcast() used on the merchant dimension join.",
+      "fix": "None needed."
+    },
+    {
+      "id": 8,
+      "name": "HARDCODED_PATHS",
+      "status": "FAIL",
+      "finding": "File paths are hardcoded as strings.",
+      "fix": "Replace hardcoded paths with parameters."
+    },
+    {
+      "id": 9,
+      "name": "SCHEMA_VALIDATION",
+      "status": "WARN",
+      "finding": "No schema validation before transforming.",
+      "fix": "Add schema validation to check expected columns."
+    },
+    {
+      "id": 10,
+      "name": "DEDUPLICATION",
+      "status": "PASS",
+      "finding": "Explicit dedup logic on transaction_id present.",
+      "fix": "None needed."
+    },
+    {
+      "id": 11,
+      "name": "METADATA_OUTPUT",
+      "status": "PASS",
+      "finding": "Pipeline writes a run summary JSON at the end.",
+      "fix": "None needed."
+    },
+    {
+      "id": 12,
+      "name": "IMPORTS",
+      "status": "PASS",
+      "finding": "All imports are present and specific.",
+      "fix": "None needed."
+    }
+  ],
+  "summary": {
+    "pass_count": 8,
+    "fail_count": 2,
+    "warn_count": 2,
+    "merge_recommendation": "APPROVE_WITH_CHANGES",
+    "top_3_fixes": [
+      "Wrap each pipeline stage in try/except blocks.",
+      "Replace hardcoded paths with parameters.",
+      "Add logging statements to log row counts after each transformation."
+    ]
+  },
+  "reviewed_file": "pipeline_brain/generated_pipeline.py",
+  "reviewed_at": "2026-05-26T12:39:47.487752+00:00",
+  "model": "amazon.nova-pro-v1:0"
+}
