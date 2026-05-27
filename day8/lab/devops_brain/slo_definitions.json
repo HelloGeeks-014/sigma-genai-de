@@ -1,0 +1,28 @@
+{
+  "slo_context": {
+    "purpose": "To ensure the financial data pipeline meets business requirements and delivers reliable data for decision-making.",
+    "review_cadence": "Quarterly",
+    "owner": "DataOps Team"
+  },
+  "data_freshness_slo": {
+    "threshold_hours": 24,
+    "reasoning": "To ensure the dashboard has the most recent data from the previous day's transactions.",
+    "breach_impact": "Stale data leads to incorrect financial reports and decision-making."
+  },
+  "quality_threshold_slo": {
+    "threshold_pct": 99.9,
+    "reasoning": "To maintain high data quality and integrity for accurate financial reporting.",
+    "breach_impact": "Low-quality data results in erroneous financial insights and potential compliance issues."
+  },
+  "row_count_slo": {
+    "min_rows": 17,
+    "max_rows": 25,
+    "buffer_pct": 20.0,
+    "reasoning": "To account for variability in transaction volumes while ensuring data completeness."
+  },
+  "pipeline_runtime_slo": {
+    "threshold_minutes": 120,
+    "reasoning": "To allow sufficient time for data processing before the morning dashboard update.",
+    "breach_impact": "Exceeding runtime delays the dashboard update, impacting timely decision-making."
+  }
+}
