@@ -15,7 +15,14 @@ def _get_client():
     return _client
 
 
-def _invoke(model_id: str, system: str, user: str, max_tokens: int = 1500, temperature: float = 0.3) -> str:
+def _invoke(
+    model_id: str,
+    system: str,
+    user: str,
+    max_tokens: int = 1500,
+    temperature: float = 0.3,
+    return_usage: bool = False,
+):
     body = {
         "messages": [{"role": "user", "content": [{"text": user}]}],
         "system": [{"text": system}],
@@ -26,12 +33,30 @@ def _invoke(model_id: str, system: str, user: str, max_tokens: int = 1500, tempe
         body=json.dumps(body),
     )
     result = json.loads(response["body"].read())
-    return result["output"]["message"]["content"][0]["text"]
+    text = result["output"]["message"]["content"][0]["text"]
+    usage = result.get("usage", {}) or {}
+    if return_usage:
+        return text, usage
+    return text
 
 
-def call_nova_lite(system: str, user: str, max_tokens: int = 1000) -> str:
-    return _invoke("amazon.nova-lite-v1:0", system, user, max_tokens, temperature=0.3)
+def call_nova_lite(system: str, user: str, max_tokens: int = 1000, return_usage: bool = False):
+    return _invoke(
+        "amazon.nova-lite-v1:0",
+        system,
+        user,
+        max_tokens,
+        temperature=0.3,
+        return_usage=return_usage,
+    )
 
 
-def call_nova_pro(system: str, user: str, max_tokens: int = 1500) -> str:
-    return _invoke("amazon.nova-pro-v1:0", system, user, max_tokens, temperature=0.2)
+def call_nova_pro(system: str, user: str, max_tokens: int = 1500, return_usage: bool = False):
+    return _invoke(
+        "amazon.nova-pro-v1:0",
+        system,
+        user,
+        max_tokens,
+        temperature=0.2,
+        return_usage=return_usage,
+    )

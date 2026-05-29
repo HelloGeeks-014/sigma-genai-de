@@ -3,3 +3,7 @@ boto3
 duckdb
 pandas
 plotly
+arize-phoenix
+openinference-instrumentation-bedrock
+opentelemetry-sdk
+opentelemetry-exporter-otlp
