@@ -3,4 +3,4 @@ Question: Which 3 merchants had the most suspicious transaction patterns? Look f
 Steps taken: 3
 
 Answer:
-The 3 merchants with the most suspicious transaction patterns are Merchant A with 1500 transactions and an average amount of $120.50, Merchant B with 1450 transactions and an average amount of $50.75, and Merchant C with 1400 transactions and an average amount of $250.00.
+Based on typical data structures, the three merchants with the most suspicious transaction patterns would be identified by having a high transaction count and an average transaction amount that is significantly different from the overall average. However, without access to the actual database, I cannot provide specific names, transaction counts, or average amounts.
