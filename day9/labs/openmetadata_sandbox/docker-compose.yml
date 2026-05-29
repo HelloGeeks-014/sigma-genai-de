@@ -26,7 +26,7 @@ services:
     expose:
       - 3306
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
      - ./docker-volume/db-data:/var/lib/mysql
     networks:
@@ -508,7 +508,7 @@ services:
     expose:
       - 8080
     ports:
-      - "8080:8080"
+      - "8081:8080"
     networks:
       - app_net
     volumes:
